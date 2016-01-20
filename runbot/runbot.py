@@ -438,6 +438,16 @@ class runbot_repo(osv.osv):
         self.scheduler(cr, uid, ids, context=context)
         self.reload_nginx(cr, uid, context=context)
 
+    def unlink(self, cr, uid, ids, context=None):
+        # ondelete=cascade works on database level, but we want
+        # runbot.build#unlink to execute
+        branch_obj = self.pool['runbot.branch']
+        branch_obj.unlink(
+            cr, uid, build_obj.search(cr, uid, [('repo_id', 'in', ids)],
+                                      context=context),
+            context=context)
+        return super(runbot_repo, self).unlink(cr, uid, ids, context=context)
+
 class runbot_branch(osv.osv):
     _name = "runbot.branch"
     _order = 'name'
@@ -498,6 +508,15 @@ class runbot_branch(osv.osv):
             return False
         return True
 
+    def unlink(self, cr, uid, ids, context=None):
+        # ondelete=cascade works on database level, but we want
+        # runbot.build#unlink to execute
+        build_obj = self.pool['runbot.build']
+        build_obj.unlink(
+            cr, uid, build_obj.search(cr, uid, [('branch_id', 'in', ids)],
+                                      context=context),
+            context=context)
+        return super(runbot_branch, self).unlink(cr, uid, ids, context=context)
 
 class runbot_build(osv.osv):
     _name = "runbot.build"
@@ -1164,6 +1183,8 @@ class runbot_build(osv.osv):
 
     def kill(self, cr, uid, ids, result=None, context=None):
         for build in self.browse(cr, uid, ids, context=context):
+            if not build.pid:
+                continue
             build._log('kill', 'Kill build %s' % build.dest)
             build.logger('killing %s', build.pid)
             try:
@@ -1201,6 +1222,10 @@ class runbot_build(osv.osv):
             'func': func,
             'line': '0',
         }, context=context)
+
+    def unlink(self, cr, uid, ids, context=None):
+        self.kill(cr, uid, ids, result='killed', context=context)
+        return super(runbot_build, self).unlink(cr, uid, ids, context=context)
 
 class runbot_event(osv.osv):
     _inherit = 'ir.logging'
