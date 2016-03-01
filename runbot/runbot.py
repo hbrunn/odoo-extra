@@ -1145,7 +1145,7 @@ class runbot_build(osv.osv):
                 build._local_cleanup()
 
     def skip(self, cr, uid, ids, context=None):
-        self.write(cr, uid, ids, {'state': 'done', 'result': 'skipped'}, context=context)
+        self.kill(cr, uid, ids, result='skipped', context=context)
         to_unduplicate = self.search(cr, uid, [('id', 'in', ids), ('duplicate_id', '!=', False)])
         if len(to_unduplicate):
             self.force(cr, uid, to_unduplicate, context=context)
