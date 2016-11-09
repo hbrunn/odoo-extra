@@ -443,7 +443,7 @@ class runbot_repo(osv.osv):
         # runbot.build#unlink to execute
         branch_obj = self.pool['runbot.branch']
         branch_obj.unlink(
-            cr, uid, build_obj.search(cr, uid, [('repo_id', 'in', ids)],
+            cr, uid, branch_obj.search(cr, uid, [('repo_id', 'in', ids)],
                                       context=context),
             context=context)
         return super(runbot_repo, self).unlink(cr, uid, ids, context=context)
