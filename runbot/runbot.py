@@ -1167,7 +1167,11 @@ class runbot_build(osv.osv):
         # cleanup: find any build older than 7 days.
         root = self.pool['runbot.repo'].root(cr, uid)
         build_dir = os.path.join(root, 'build')
+        if not os.path.exists(build_dir):
+            return
         builds = os.listdir(build_dir)
+        if not builds:
+            return
         cr.execute("""
             SELECT dest
               FROM runbot_build
